@@ -17,24 +17,21 @@ module {
     };
 
     public type ObsInit<V> = {
-        var insert: O.Observable<(?Nat, V)>;
+        insert: O.Observable<(?Nat, V)>;
         var before_insert: O.Observable<(?Nat, V)>;
         var after_insert: O.Observable<(Nat, V)>;
         var after_update: O.Observable<(Nat, V, V)>;
-        var before_remove: O.Observable<(Nat, V)>;
-        var after_remove: O.Observable<(Nat, V)>;
+
     };
 
     public func init_obs<V>() : ObsInit<V> {
         let insert = Subject<(?Nat, V)>();
         return {
-            var insert;
+            insert;
             var before_insert = insert;
             var after_insert = Subject<(Nat, V)>();
             var after_update = Subject<(Nat, V, V)>();
-
-            var before_remove = Subject<(Nat, V)>();
-            var after_remove = Subject<(Nat, V)>();
+ 
         };
     };
 

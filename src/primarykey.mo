@@ -11,7 +11,7 @@ module {
 
         // check if document pk->idx mapping already exists
         obs.before_insert := O.pipe2(
-        obs.insert,
+        obs.before_insert,
         O.map<(?Nat, V),(?Nat, V)>(func((inc_idx: ?Nat, v: V)) : ((?Nat, V)) {
             let ?idx = BTree.get(pkstore, compare, to_key(v)) else return (null, v);
             (?idx, v);
