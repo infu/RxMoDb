@@ -1,0 +1,8 @@
+{
+  "defaults": {
+    "build": {
+      "packtool": "mops sources"
+    }
+  },
+  "dfx": "0.14.1"
+}
