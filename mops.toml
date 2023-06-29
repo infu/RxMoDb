@@ -1,3 +1,9 @@
+[package]
+name = "rxmodb"
+version = "0.1.0"
+description = "RxMoDb is a Motoko Database using Vector for its main storage and BTree for indexes"
+repository = "https://github.com/infu/rxmodb"
+
 [dependencies]
 base = "0.9.3"
 rxmo = "0.1.3"
