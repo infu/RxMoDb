@@ -17,7 +17,8 @@ module {
         db: R.RXMDB<V>;
         store: BTree.BTree<K, Nat>;
         compare: Compare<K>;
-        key: (V) -> K
+        key: (V) -> K;
+        regenerate:{#no; #yes};
     };
     
     public class Use<K, V>({obs; db; store; compare; key} : Config<K,V>) {
@@ -39,7 +40,7 @@ module {
 
     };
 
-    public func Subscribe<K, V>({obs; db; store; compare; key} : Config<K,V>) : () {
+    public func Subscribe<K, V>({obs; db; store; compare; key; regenerate} : Config<K,V>) : () {
 
         let clear = func() : () {
                 // wipes the whole btree
@@ -79,8 +80,18 @@ module {
             complete = O.null_func;
         });
 
-        // can't change primary key, so no need to handle update
+        // can't change primary key, so no need to handle updates
 
+        switch(regenerate) {
+            case (#no) ();
+            case (#yes) {
+                clear();
+                Vector.iterateItems<?V>(db.vec, func(idx, v) {
+                    let ?x = v else return;
+                    insert((idx, x));
+                });
+            };
+        };
     }
 
 
