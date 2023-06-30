@@ -31,6 +31,12 @@ module {
                let ?v = Vector.get<?V>(db.vec, idx) else Debug.trap("E101 Internal Error");
                ?v;
         };
+
+        public func delete(pk: K) : () {
+               let ?idx = BTree.get(store, compare, pk) else return;
+               R.deleteIdxF<V>(db, obs, idx);
+        };
+
     };
 
     public func Subscribe<K, V>({obs; db; store; compare; key} : Config<K,V>) : () {

@@ -78,22 +78,31 @@ module {
         });
       
 
-        public func delete( idx: Nat ) : () {
-            let ?v = Vector.get(db.vec, idx) else return;
-            Vector.put(db.vec, idx, null);
-            db.reuse_queue := List.push(idx, db.reuse_queue);
-            obs.index_delete.next((idx, v));
+        public func deleteIdx( idx: Nat ) : () {
+            deleteIdxF<V>(db, obs, idx);
         };
 
-        public func get( idx: Nat) : ?V {
+        public func getIdx( idx: Nat) : ?V {
             return Vector.get(db.vec, idx);
         };
-
+        
+        /// Insert or ( Update if you have a Primary Key ) 
         public func insert( v: V ) : () {
             obs.insert.next((null, v));
         };
 
-
+        /// Do not use if you have a Primary Key, the idx will be ignored
+        public func setIdx( idx: Nat, v: V ) : () {
+            obs.insert.next((?idx, v));
+        };
      
+    };
+
+
+    public func deleteIdxF<V>(db: RXMDB<V>, obs: ObsInit<V>, idx: Nat ) : () {
+        let ?v = Vector.get(db.vec, idx) else return;
+        Vector.put(db.vec, idx, null);
+        db.reuse_queue := List.push(idx, db.reuse_queue);
+        obs.index_delete.next((idx, v));
     };
 }

@@ -36,6 +36,7 @@ public type Init = { // All stable
     pk : PK.Init<Nat64>;
     updatedAt : IDX.Init<UpdateAtKey>;
     score : IDX.Init<Nat64>;
+    scoreBottom : IDX.Init<Nat64>;
 };
 
 public func init() : Init {
@@ -44,6 +45,7 @@ public func init() : Init {
     pk = PK.init<PKKey>(?32);
     updatedAt = IDX.init<UpdateAtKey>(?32);
     score = IDX.init<ScoreKey>(?32);
+    scoreBottom = IDX.init<ScoreKey>(?32);
     };
 };
 
@@ -61,6 +63,7 @@ public type Use = {
     pk : PK.Use<PKKey, Doc>;
     updatedAt : IDX.Use<UpdateAtKey, Doc>;
     score : IDX.Use<ScoreKey, Doc>;
+    scoreBottom : IDX.Use<ScoreKey, Doc>;
 };
 
 public func use(init : Init) : Use {
@@ -85,25 +88,40 @@ public func use(init : Init) : Use {
         compare=Nat64.compare;
         key=updatedAt_key;
         regenerate=#no;
+        keep=#all;
         };
     IDX.Subscribe(updatedAt_config);
 
     // Index - score
-    let score_conig = {
+    let score_config = {
         db=init.db;
         obs;
         store=init.score;
         compare=Nat64.compare;
         key=score_key;
         regenerate=#no;
+        keep=#top(10);
         };
-    IDX.Subscribe(score_conig); 
+    IDX.Subscribe(score_config); 
+
+    // Index - score
+    let scoreBottom_config = {
+        db=init.db;
+        obs;
+        store=init.scoreBottom;
+        compare=Nat64.compare;
+        key=score_key;
+        regenerate=#no;
+        keep=#bottom(10);
+        };
+    IDX.Subscribe(scoreBottom_config); 
 
     return {
         db = RXMDB.Use<Doc>(init.db, obs);
         pk = PK.Use(pk_config);
         updatedAt = IDX.Use(updatedAt_config);
-        score = IDX.Use(score_conig);
+        score = IDX.Use(score_config);
+        scoreBottom = IDX.Use(scoreBottom_config);
     }
 
 }

@@ -12,17 +12,25 @@ module {
     public func init<K>(btorder: ?Nat) : BTree.BTree<K,Nat> = BTree.init<K, Nat>(btorder);
     public type Unsubscribe = () -> ();
 
+    public type Keep = {
+        #all;
+        #bottom : Nat;
+        #top : Nat;
+    };
+
     public type Config<K,V> ={
         db: R.RXMDB<V>; 
         obs: R.ObsInit<V>; 
         store: BTree.BTree<K, Nat>; 
         compare: Compare<K>; 
         key: (Nat, V) -> ?K; 
-        regenerate:{#no; #yes}
+        regenerate:{#no; #yes};
+        keep: Keep;
         };
 
 
-    public class Use<K, V>({db; obs; store; compare; key; regenerate}: Config<K, V>) {
+
+    public class Use<K, V>({db; obs; store; compare; key; regenerate; keep}: Config<K, V>) {
         
         public func findIdx(start: K, end: K, dir: BTree.Direction, limit: Nat) : [(K, Nat)] {
                  BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results;
@@ -38,7 +46,7 @@ module {
     };
 
     
-    public func Subscribe<K, V>({db; obs; store; compare; key; regenerate}: Config<K, V>) : () {
+    public func Subscribe<K, V>({db; obs; store; compare; key; regenerate; keep}: Config<K, V>) : () {
 
         let clear = func () {
             store.root := #leaf({
@@ -50,9 +58,32 @@ module {
             store.size := 0;
         };
 
+        let insertInternal = func(idx:Nat, k:K) {
+            switch(keep) {
+                case (#all) ();
+                case (#top(len)) {
+                    if (BTree.size(store) >= len) {
+                        let ?(z,_) = BTree.min(store) else Debug.trap("E231 Internal Error");
+                        if (compare(z, k) != #greater) {
+                            ignore BTree.delete(store, compare, z); // Delete the lowest
+                        } else return ();
+                    }
+                };
+                case (#bottom(len)) {
+                    if (BTree.size(store) >= len) {
+                        let ?(z,_) = BTree.max(store) else Debug.trap("E231 Internal Error");
+                        if (compare(z, k) != #less) {
+                            ignore BTree.delete(store, compare, z); // Delete the highest
+                        } else return ();
+                    }
+                };
+            };
+            ignore BTree.insert(store, compare, k, idx);
+        };
+
         let insert = func((idx: Nat, v: V)) : () {
                 let ?k = key(idx, v) else return ();
-                ignore BTree.insert(store, compare, k, idx);
+                insertInternal(idx, k);
             };
             
         let update = func((idx: Nat, pv:V, v: V)) : () {
@@ -63,14 +94,14 @@ module {
                     case (?pv_key, ?v_key) {
                          if (compare(pv_key, v_key) != #equal) {
                         ignore BTree.delete(store, compare, pv_key);
-                        ignore BTree.insert(store, compare, v_key, idx);
+                        insertInternal(idx, v_key);
                         }
                     };
                     case (?pv_key, null) {
                         ignore BTree.delete(store, compare, pv_key);
                     };
                     case (null, ?v_key) {
-                        ignore BTree.insert(store, compare, v_key, idx);
+                        insertInternal(idx, v_key);
                     };
                 }  
             };
