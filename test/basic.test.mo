@@ -148,6 +148,28 @@ test("Check if insertation works again", func() {
 
 });
 
+
+test("Iter #fwd", func() {
+    var t:Text = "";
+
+    for ( (k,v) in hero.pk.findIter(0, ^0, #fwd) ) {
+        t := t # debug_show(v)
+    };
+
+    assert(t == "0132");
+});
+
+test("Iter #bwd", func() {
+    var t:Text = "";
+
+    for ( (k,v) in hero.pk.findIter(0, ^0, #bwd) ) {
+        t := t # debug_show(v)
+    };
+
+    assert(t == "2310");
+});
+
+
 test("Delete (hard) and reuse Vector slots", func() {
    
     hero.db.deleteIdx(0);
