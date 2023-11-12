@@ -27,25 +27,25 @@ module {
     public class Use<K, V>({obs; db; store; compare; key} : Config<K,V>) {
         
         public func getIdx(pk : K) : ?Nat {
-               BTree.get(store, compare, pk);
+            BTree.get(store, compare, pk);
         };
         
         public func get(pk: K) : ?V {
-               let ?idx = BTree.get(store, compare, pk) else return null;
-               let ?v = Vector.get<?V>(db.vec, idx) else Debug.trap("E101 Internal Error");
-               ?v;
+            let ?idx = BTree.get(store, compare, pk) else return null;
+            let ?v = Vector.get<?V>(db.vec, idx) else Debug.trap("E101 Internal Error");
+            ?v;
         };
 
         public func delete(pk: K) : () {
-               let ?idx = BTree.get(store, compare, pk) else return;
-               R.deleteIdxF<V>(db, obs, idx);
+            let ?idx = BTree.get(store, compare, pk) else return;
+            R.deleteIdxF<V>(db, obs, idx);
         };
 
         public func findIdx(start: K, end: K, dir: BTree.Direction, limit: Nat) : [(K, Nat)] {
-                    BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results;
+            BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results;
         };
         
-        public func findIter(start: K, end: K, dir: BTree.Direction) : Iter.Iter<(K, Nat)> { // Tries to delete everything found. If its too much, you will need to write your own function that does it.
+        public func findIter(start: K, end: K, dir: BTree.Direction) : Iter.Iter<(K, Nat)> { 
 
             var res = BTree.scanLimit<K, Nat>(store, compare, start, end, dir, IterBatch);
             var idx:Nat = 0;
@@ -72,11 +72,11 @@ module {
         };
 
         public func find(start: K, end: K, dir: BTree.Direction, limit: Nat) : [V] {
-                Array.map<(K, Nat),V>(BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results,
-                func((k, v)) {
-                    let ?x = Vector.get<?V>(db.vec, v) else Debug.trap("E101 Internal Error");
-                    x;
-                });
+            Array.map<(K, Nat),V>(BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results,
+            func((k, v)) {
+                let ?x = Vector.get<?V>(db.vec, v) else Debug.trap("E101 Internal Error");
+                x;
+            });
         };
     };
 

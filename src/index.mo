@@ -4,6 +4,7 @@ import BTree "mo:stableheapbtreemap/BTree";
 import Array "mo:base/Array";
 import Vector "mo:vector";
 import Debug "mo:base/Debug";
+import Iter "mo:base/Iter";
 
 module {
     public type Compare<K> = (K, K) -> { #less; #equal; #greater }; 
@@ -26,23 +27,56 @@ module {
         key: (Nat, V) -> ?K; 
         regenerate:{#no; #yes};
         keep: Keep;
-        };
-
-
+    };
+    
+    let IterBatch = 200;
 
     public class Use<K, V>({db; obs; store; compare; key; regenerate; keep}: Config<K, V>) {
         
         public func findIdx(start: K, end: K, dir: BTree.Direction, limit: Nat) : [(K, Nat)] {
-                 BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results;
+            BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results;
         };
         
-        public func find(start: K, end: K, dir: BTree.Direction, limit: Nat) : [V] {
-                Array.map<(K, Nat),V>(BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results,
-                func((k, v)) {
-                    let ?x = Vector.get<?V>(db.vec, v) else Debug.trap("E101 Internal Error");
-                    x;
-                });
+        public func get(a: K) : ?V {
+            let ?idx = BTree.get<K, Nat>(store, compare, a) else return null;
+            let ?x = Vector.get<?V>(db.vec, idx) else Debug.trap("E101 Internal Error");
+            ?x
         };
+
+        public func find(start: K, end: K, dir: BTree.Direction, limit: Nat) : [V] {
+            Array.map<(K, Nat),V>(BTree.scanLimit<K, Nat>(store, compare, start, end, dir, limit).results,
+            func((k, v)) {
+                let ?x = Vector.get<?V>(db.vec, v) else Debug.trap("E101 Internal Error");
+                x;
+            });
+        };
+
+        public func findIter(start: K, end: K, dir: BTree.Direction) : Iter.Iter<(K, Nat)> { 
+
+            var res = BTree.scanLimit<K, Nat>(store, compare, start, end, dir, IterBatch);
+            var idx:Nat = 0;
+            var size = Array.size(res.results);
+               
+            { 
+                next = func() : ?(K, Nat) {
+                    idx += 1;
+                    
+                    if (idx > size) {
+                        if (size < IterBatch) return null;
+                        switch(res.nextKey) {
+                            case (null) return null;
+                            case (?nextKey) {
+                                res := BTree.scanLimit<K, Nat>(store, compare, nextKey, end, dir, IterBatch);
+                                idx := 1;
+                                size := Array.size(res.results);
+                            };
+                        };
+                    };
+                    ?res.results[idx - 1];
+                }
+            };
+        };
+
     };
 
     

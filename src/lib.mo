@@ -91,6 +91,11 @@ module {
             obs.insert.next((null, v));
         };
 
+        // public func update ( idx: Nat, f:(V) -> V ) : () {
+        //     let ?v = Vector.get(db.vec, idx) else return;
+        //     obs.insert.next((?idx, f(v)));
+        // };
+
         /// Do not use if you have a Primary Key, the idx will be ignored
         public func setIdx( idx: Nat, v: V ) : () {
             obs.insert.next((?idx, v));
