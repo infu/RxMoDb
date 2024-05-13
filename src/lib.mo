@@ -4,7 +4,8 @@ import Debug "mo:base/Debug";
 import List "mo:base/List";
 
 module {
-    let {Observable; Subject; null_func; of; pipe2; pipe3; pipe4; first; map; concatAll; mergeMap; distinct; reduce; takeUntil} = O;
+    //let {Observable; Subject; null_func; of; pipe2; pipe3; pipe4; first; map; concatAll; mergeMap; distinct; reduce; takeUntil} = O;
+    let {Subject; null_func } = O;
 
     public type RXMDB<V> = {
         vec: Vector.Vector<?V>;
@@ -20,13 +21,13 @@ module {
     };
 
     public type ObsInit<V> = {
-        insert: O.Observable<(?Nat, V)>;
-        var before_insert: O.Observable<(?Nat, V)>;
-        var index_insert: O.Observable<(Nat, V)>;
-        var index_update: O.Observable<(Nat, V, V)>;
-        var index_delete: O.Observable<(Nat, V)>;
-        var after_insert: O.Observable<(Nat, V)>;
-        var after_update: O.Observable<(Nat, V, V)>;
+        insert: O.Obs<(?Nat, V)>;
+        var before_insert: O.Obs<(?Nat, V)>;
+        var index_insert: O.Obs<(Nat, V)>;
+        var index_update: O.Obs<(Nat, V, V)>;
+        var index_delete: O.Obs<(Nat, V)>;
+        var after_insert: O.Obs<(Nat, V)>;
+        var after_update: O.Obs<(Nat, V, V)>;
     };
 
     public func init_obs<V>() : ObsInit<V> {
@@ -45,7 +46,7 @@ module {
 
     public class Use<V>(db: RXMDB<V>, obs: ObsInit<V>) {
 
-        var unsubscribeBI = obs.before_insert.subscribe({
+        var _unsubscribeBI = obs.before_insert.subscribe({
             next = func ((inc_idx:?Nat, v:V)) : () {
                 switch(inc_idx) {
                     case (?idx) {
